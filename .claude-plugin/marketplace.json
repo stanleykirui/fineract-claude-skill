@@ -1,5 +1,6 @@
 {
   "name": "fineract-claude-skill",
+  "description": "Apache Fineract 1.14.0 core banking knowledge for Claude: full API lookup (OpenAPI + legacy docs), admin & operations guides, and usage conventions.",
   "owner": {
     "name": "Stanley Kirui",
     "url": "https://github.com/stanleykirui"

@@ -47,7 +47,7 @@ cash allocations/settlements + journals.
   settle back `POST .../cashiers/{cashierId}/settle`.
 - Journals/transactions: `GET /v1/tellers/{tellerId}/journals`, `.../transactions`,
   `.../cashiers/{cashierId}/transactions` + summary.
-- Requires financial activity mappings 101/103 (Cash at Teller / Mainvault) — see `accounting.md`.
+- Requires financial activity mappings 102/101 (Cash at Teller / Cash at Mainvault) — see `accounting.md`.
 - Cash transactions posted by that staff at that office flow into the cashier's running balance.
 
 ## Account number formats

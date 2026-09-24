@@ -54,10 +54,12 @@ standard vouchers fast; `POST /v1/journalentries` accepts `accountingRule` id.
 
 ## Financial activity mapping
 
-`/v1/financialactivityaccounts`: map platform activities → GL accounts. Activity ids: 100=Asset
-Transfer, 200=Liability Transfer (savings transfers in transit), 103=Cash at Mainvault, 101=Cash at
-Teller, 300=Opening Balances Contra. Required before tellers/vault ops and inter-account transfer
-suspense postings work.
+`/v1/financialactivityaccounts`: map platform activities → GL accounts. Activity ids (source:
+`AccountingConstants.FinancialActivity`): 100=Asset Transfer, 200=Liability Transfer (savings
+transfers in transit), 101=Cash at Mainvault, 102=Cash at Teller, **103=Fund Source (the GL debited
+by every client-charge payment — its only consumer in the codebase)**, 201=Payable Dividends,
+300=Opening Balances Contra. Required before tellers/vault ops and inter-account transfer suspense
+postings work.
 
 ## Periodic accrual
 

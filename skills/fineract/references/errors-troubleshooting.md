@@ -34,6 +34,17 @@ Error envelope recap (`api-conventions.md`): top-level `userMessageGlobalisation
 | `error.msg.office.id.invalid` on visible data | Office-hierarchy scoping — user's office can't see that branch |
 | `LoanIsLocked` / `error.msg.loan.locked` | COB owns the loan right now — retry or inline-COB |
 | `error.msg.user.password...` | Password policy (`/v1/passwordpreferences`) |
+| `error.msg.client.not.active.exception` (403) | Client isn't Active. Client-charge add/pay/waive/delete/undo **and every savings write, account creation included**, need an Active client — activate first |
+| `validation.msg.CLIENTCHARGE.transaction.invalid.charge.amount.paid.in.access` | Paying **more than the outstanding** on a client charge ("in access" = "in excess"). Re-read `amountOutstanding` and pay at most that |
+| `...transaction.invalid.account.charge.is.paid` / `...charge.is.already.waived` / `charge.is.not.active` | The client charge is already settled, waived or inactive — re-read before paying |
+| `transaction.not.allowed.transaction.date.is.on.holiday` / `...is.a.non.workingday` (also `charge.due.date.is.on.holiday` / `...a.non.workingday`) | Date falls on a holiday or non-working day. Use a working day, or enable global configs `allow-transactions-on-holiday` / `allow-transactions-on-non-workingday` (e.g. for 24/7 USSD/mobile channels) |
+| `transaction.before.activationDate` / `transaction.is.futureDate` / `dueDate.before.activationDate` | Client-charge date before the client's activation, or in the future |
+| `error.msg.financialActivityAccount.not.found` | A needed financial activity isn't mapped — e.g. 103 Fund Source for client-charge payments. Map it (`accounting.md`) |
+| `error.msg.glJournalEntry.invalid.accounting.closed` | Posting or reversing on/before the office's latest GL closure — reversals use the original date. Adjust in the current period |
+| `error.msg.savingsaccount.transaction.withdrawals.blocked.during.lockin.period` | Savings lock-in — **every** withdrawal (transfers out included) is blocked until `lockedInUntilDate` |
+| `cannot.be.redeemed.due.to.lockinperiod` | Share lock-in — the only redemption gate |
+| `error.msg.clients.transaction.cannot.be.undone` | That client transaction was already reversed |
+| `error.msg.client.charge.cannot.be.deleted` | The client charge has payments — waive the remainder instead |
 | `Invalid master password` (startup log) | Registry `schema_password`/hash vs runtime master password mismatch (`admin/tenancy-provisioning.md`) |
 
 ## Situational recipes
@@ -55,6 +66,16 @@ Error envelope recap (`api-conventions.md`): top-level `userMessageGlobalisation
 - **405 on a POST** → command endpoints need `?command=`; base POST may not exist for that URL.
 - **Big lists slow/timeout** → always paginate; avoid `associations=all` in loops; prefer
   external-id direct lookups.
+- **Client-charge payment succeeded but there is no journal entry** → the charge definition has no
+  GL account, so Fineract skipped accounting entirely. Map the charge's income account (and activity
+  103), then fix the gap with a current-period entry.
+- **Waived fees don't appear anywhere in the GL** → by design: client-charge waivers post nothing. Report
+  forgone fees from `amountWaived`.
+- **Fee "paid" but `isPaid` is false** → it was waived (`isWaived: true`). Test `amountOutstanding == 0`.
+- **A retried batch or API call did nothing the second time** → an `Idempotency-Key` was reused for a
+  different resource of the same entity type; the first result was replayed (`api-conventions.md`).
+- **Nightly job keeps failing** (e.g. Pay Due Savings Charges) → one account can't cover a due charge;
+  the job pays full outstandings only and fails the run. Check `/v1/jobs/{id}/runhistory`.
 
 ## When the message isn't enough
 

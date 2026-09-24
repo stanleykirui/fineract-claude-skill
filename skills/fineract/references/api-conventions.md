@@ -85,10 +85,15 @@ integrations idempotent and lookups cheap.
 ## Idempotency keys
 
 Header `Idempotency-Key: <unique-string>` (name configurable via
-`FINERACT_IDEMPOTENCY_KEY_HEADER_NAME`). Semantics: same key + same action + same entity =
-same command. Completed → replays stored result with `x-served-from-cache: true`; still running →
-409. Works per batch-item too (below). Always use one on money-moving writes (repayments, deposits,
-disbursements).
+`FINERACT_IDEMPOTENCY_KEY_HEADER_NAME`). Semantics: same key + same action name + same **entity
+type** (e.g. `CLIENTCHARGE`, `SAVINGSACCOUNT`) = same command. Completed → replays stored result with
+`x-served-from-cache: true`; still running → 409. Works per batch-item too (below). Always use one on
+money-moving writes (repayments, deposits, disbursements).
+
+**There is no resource id in the lookup.** Reuse a key for a *different* account or charge of the same
+type and Fineract replays the first command's result — the second write silently never happens. Derive
+keys from the business event (e.g. the payment provider's receipt/checkout id), never from coarse
+values such as the date or the member number.
 
 ## Batch API
 
@@ -110,6 +115,11 @@ transaction — all-or-nothing):
 - Each item returns `{requestId, statusCode, headers, body}`; with `enclosingTransaction=true` any
   failure rolls back the whole set.
 - Body is a **string** containing JSON, not nested JSON.
+- **Judge success per item, not by the HTTP status.** When an enclosing transaction fails and rolls
+  back, the response carries a **single error item**, not one entry per request — code that matches
+  results by `requestId` finds nothing for the rest.
+- `enclosingTransaction=true` runs at `REPEATABLE_READ` inside a resilience4j **retry**, so the whole
+  batch may be executed more than once. Put an `Idempotency-Key` on every money-moving item.
 
 ## Pagination, sorting, field selection
 

@@ -44,6 +44,19 @@ Interest For Savings) or on-demand `?command=postInterestAsOn` / `calculateInter
 `/v1/savingsaccounts/{accountId}/charges` + `paycharge|waive|inactivate` commands. Withdrawal fees &
 annual fees come from charge definitions with savings-applicable time types.
 
+- **Add:** `POST /v1/savingsaccounts/{id}/charges` `{chargeId, amount, dueDate, dateFormat, locale}` —
+  `amount` is **mandatory**, so the same charge definition can carry a different amount per account.
+  The response's `resourceId` is the savings-account-charge id to pay against.
+- **Accounting:** paying a savings charge posts **Dr the product's savings control / Cr its
+  income-from-fees account** (or the charge-specific `feeToIncomeAccountMappings`) — straight from the
+  account, with no fund-source mapping involved. Contrast client charges (`clients-groups-centers.md`).
+- **The Pay Due Savings Charges job** collects every charge with a due date on or before the business
+  date (not paid/waived, active, on an Active account) and pays the **full outstanding** — never part
+  of it. If the balance can't cover it, that payment throws and **the whole job run is marked failed**,
+  night after night. Don't leave due-dated charges an account can't cover — add and pay in one step
+  when the funds are there.
+- Paying a savings charge on a holiday is rejected unless `allow-transactions-on-holiday` is enabled.
+
 ## Fixed deposits (FD)
 
 Product `/v1/fixeddepositproducts`: term ranges (`minDepositTerm(+TypeId)`, `maxDepositTerm`),
@@ -97,4 +110,11 @@ amount-range-based tiers; optional incentives (e.g. +0.25% for female clients �
   transactions listing), but lifecycle commands live on their own resource paths.
 - Transfers between currencies are rejected — same currency both sides.
 - On-hold amounts reduce available but not ledger balance (see `availableBalance` vs
-  `accountBalance` in summaries).
+  `accountBalance` in summaries). Decide "is there enough?" from `availableBalance`.
+- **Every savings write needs an Active client** — creating the account included. A Pending client
+  cannot even receive a deposit (403 `error.msg.client.not.active.exception`).
+- **A lock-in (`lockinPeriodFrequency`) blocks *every* withdrawal until `lockedInUntilDate`** —
+  including account transfers out and any system/integration withdrawal:
+  `error.msg.savingsaccount.transaction.withdrawals.blocked.during.lockin.period`. Deposits in still
+  work. Don't put a lock-in on an account your own processes must debit; enforce "non-withdrawable"
+  in your integration layer instead.

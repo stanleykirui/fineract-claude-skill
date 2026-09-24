@@ -57,6 +57,9 @@ must **never** be read wholesale into context — always go through the script.
    `{"totalFilteredRecords", "pageItems": [...]}`. Un-paginated lists return a bare array.
 9. **Idempotency**: send header `Idempotency-Key: <unique>` on writes. Replay of a completed command
    returns the original result with `x-served-from-cache: true`; an in-flight duplicate returns 409.
+   Keys are scoped by **action + entity *type* + key — there is no resource id** in the lookup, so a
+   key must be unique per business event: reusing one for a different account/charge of the same type
+   silently replays the first result.
 10. **Template pattern**: most resources have `GET /<resource>/template` returning the dropdown
     options/defaults needed to build a create form (e.g. `/v1/loans/template?clientId=1&templateType=individual`).
 11. **Maker-checker**: if enabled for a permission, a write returns the command as a pending
@@ -64,6 +67,10 @@ must **never** be read wholesale into context — always go through the script.
     `POST /v1/makercheckers/{auditId}?command=approve`. Permissions ending `_CHECKER` control this.
 12. **Money**: amounts are JSON numbers with product-defined `digitsAfterDecimal`; currency comes from
     the product/account (`currencyCode` ISO-4217). Never assume 2 decimals.
+13. **Most client-linked writes need an ACTIVE client**: adding, paying, waiving or deleting a client
+    charge, undoing a client transaction, and **every savings write — even opening the account** —
+    fail with 403 `error.msg.client.not.active.exception` for a Pending client. A Pending client cannot
+    even be deposited to; activate first (`POST /v1/clients/{id}?command=activate`).
 
 ### Canonical first call
 
@@ -78,7 +85,7 @@ curl -k -u mifos:password -H "Fineract-Platform-TenantId: default" \
 |---|---|
 | Install & run (Docker, from source), first calls, health | `references/getting-started.md` |
 | Request/response conventions in depth (dates, commands, batch API, external IDs, search) | `references/api-conventions.md` |
-| Clients, groups, centers, KYC-ish data (identifiers, documents, addresses, family) | `references/domains/clients-groups-centers.md` |
+| Clients, groups, centers, KYC-ish data (identifiers, documents, addresses, family); **client charges** (partial payment, waive, undo, how they post to the GL) | `references/domains/clients-groups-centers.md` |
 | Loans: products, full lifecycle, transactions, charges, reschedule, delinquency, progressive loans | `references/domains/loans.md` |
 | Savings, fixed & recurring deposits, interest-rate charts, account transfers, standing instructions | `references/domains/savings-deposits.md` |
 | Share products & accounts, dividends | `references/domains/shares.md` |

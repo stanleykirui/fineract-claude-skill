@@ -57,3 +57,14 @@ POST /v1/accounts/share/{accountId}?command=activate                   → Activ
   currency (`savingsAccountId` at application).
 - Inactive clients only participate in dividends if the product allows it.
 - Share accounts have no overdraft/withdrawal concept — only purchase/redeem.
+- **Redemption's only gate is the lock-in** (`lockinPeriodFrequency`; with none set there is no
+  gate): `cannot.be.redeemed.due.to.lockinperiod`. Other redeem failures:
+  `cannot.be.redeemed.due.to.insufficient.shares`, `no.purchase.transaction.found.before.redeem.date`,
+  `cannot.be.redeemed.due.to.insufficient.shares.for.this.redeem.date`.
+- **`minimumActivePeriod` is the minimum active period *for dividends*** — it governs dividend
+  eligibility, **not** redemption. Changing it changes who receives dividends.
+- Fineract has **no "non-redeemable / transfer-only" flag**. If by-laws say share capital is never
+  refunded (common for SACCOs, and relevant to keeping members' shares classified as equity), enforce
+  it above Fineract by never exposing `redeemshares`.
+- `shareReferenceId` is a **single** GL account with no per-payment-channel mapping — every purchase
+  debits it, whatever the money's source.

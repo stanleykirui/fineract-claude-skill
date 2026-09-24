@@ -1,0 +1,13 @@
+{
+  "name": "fineract",
+  "description": "Apache Fineract 1.14.0 core banking knowledge pack: full API lookup (563 paths / 879 operations / 1,476 schemas), admin & operations guides, and usage conventions — everything needed to build against, operate, or debug Fineract.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Stanley Kirui",
+    "url": "https://github.com/stanleykirui"
+  },
+  "homepage": "https://github.com/stanleykirui/fineract-claude-skill",
+  "repository": "https://github.com/stanleykirui/fineract-claude-skill",
+  "license": "Apache-2.0",
+  "keywords": ["fineract", "core-banking", "microfinance", "api", "openapi", "sacco", "mifos"]
+}

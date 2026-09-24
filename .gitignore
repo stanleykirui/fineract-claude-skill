@@ -1,0 +1,8 @@
+# Local site-specific overlay: never publish deployment/machine specifics.
+# The overlay convention itself is documented in the committed README.md below.
+skills/fineract/references/local/*
+!skills/fineract/references/local/README.md
+
+__pycache__/
+*.pyc
+.DS_Store

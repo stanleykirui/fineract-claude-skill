@@ -1,0 +1,15 @@
+{
+  "name": "fineract-claude-skill",
+  "owner": {
+    "name": "Stanley Kirui",
+    "url": "https://github.com/stanleykirui"
+  },
+  "plugins": [
+    {
+      "name": "fineract",
+      "source": "./",
+      "description": "Apache Fineract 1.14.0 core banking knowledge pack: full API lookup, admin & operations guides, and usage conventions.",
+      "category": "reference"
+    }
+  ]
+}
